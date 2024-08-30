@@ -19,6 +19,7 @@ const routes = [
     component: LoginView
   }
 
+  //
 ]
 
 const router = createRouter({
