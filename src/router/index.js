@@ -7,8 +7,7 @@ const routes = [
     path: '/',
     name: 'Home',
     component: HomeView
-  },
-  // 
+  }, 
   {
     path: '/about',
     name: 'About',
@@ -19,8 +18,6 @@ const routes = [
     name: 'Login',
     component: LoginView
   }
-
-  //
 ]
 
 const router = createRouter({
