@@ -1,12 +1,11 @@
 <template>
-    <!-- 🗄️ W3. Library Registration Form -->
+    
     <div class="container mt-5">
       <div class="row">
         <div class="col-md-8 offset-md-2">
-          <h1 class="text-center">🗄️ W5. Please login</h1>
-        
-          <form @submit.prevent="submitForm">
-            <div class="row mb-3">
+          <h1 class="text-center">🗄️ Dear User Please login</h1>
+          <form @submit.prevent="submitForm" >
+            <div class="row mb-3 offset-md-3">
               <div class="col-md-6 col-sm-6">
                 <label for="username" class="form-label">Username</label>
                 <input
@@ -22,7 +21,7 @@
               
               </div>
             </div>
-            <div class="row mb-3">
+            <div class="row mb-3 offset-md-3">
               <div class="col-md-6 col-sm-6">
                 <label for="password" class="form-label">Password</label>
                 <input
@@ -56,26 +55,25 @@
   const formData = ref({
     username: '',
     password: '',
-    
   })
   
-//   const submittedCards = ref([])
+
   
   const submitForm = () => {
     validateName(true)
     validatePassword(true)
-    if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
-        alert("login success")
+    if (!errors.value.username 
+        && !errors.value.password 
+        && formData.value.username === hardCodeUserName 
+        && formData.value.password === hardCodepassword){
+        alert("Grats! login success")
     }
   }
-  
-//   const clearForm = () => {
 
   
   const errors = ref({
     username: null,
-    password: null,
-    
+    password: null,  
   })
   
   const validateName = (blur) => {
@@ -89,7 +87,7 @@
   const validatePassword = (blur) => {
     
     if (formData.value.password.length < 6) {
-      if (blur) errors.value.password = `Password must be at least 6 characters long.`
+      if (blur) errors.value.password = `Password must be at least 6 characters length.`
     } else {
       errors.value.password = null
     }
