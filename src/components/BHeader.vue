@@ -24,8 +24,9 @@
   </div>
 </template>
 <script setup>
-import {useAuth} from '../router/authenticate'
 import router from '../router/index'
+import {useAuth} from '../router/authenticate'
+
 const {isAuthenticated} = useAuth()
 
 const logout = () => {

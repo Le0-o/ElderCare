@@ -2,8 +2,8 @@ import {ref} from 'vue'
 import router from'../router'
 
 const isAuthenticated = ref(false)
-
 export function useAuth() {
+    
     const login = ()=>{
         isAuthenticated.value = true;
         // router.push({name:'About'})
