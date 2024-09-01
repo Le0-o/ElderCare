@@ -48,10 +48,12 @@
   </template>
   <script setup>
   import { ref } from 'vue'
-  import router from '../router'
+  import router from '../router/index'
+  import {useAuth} from '../router/authenticate'
   
   const hardCodeUserName = 'user'
   const hardCodepassword = '123456'
+  const {isAuthenticated} = useAuth()
    
   const formData = ref({
     username: '',
@@ -65,6 +67,8 @@
     validatePassword(true)
     if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
         alert("Grats! login success")
+        isAuthenticated.value = true
+        console.log("logininview",isAuthenticated.value)
         router.push({name:'About'})}
     }
   
