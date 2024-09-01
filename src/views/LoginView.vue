@@ -62,17 +62,6 @@
     password: '',
   })
   
-
-  
-  // const submitForm = () => {
-  //   validateName(true)
-  //   validatePassword(true)
-  //   if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
-  //       alert("Grats! login success")
-  //       isAuthenticated.value = true
-  //       console.log("logininview",isAuthenticated.value)
-  //       router.push({name:'About'})}
-  //   }
 // login.vue
 const submitForm = () => {
   validateName(true);
