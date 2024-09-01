@@ -48,6 +48,7 @@
   </template>
   <script setup>
   import { ref } from 'vue'
+  import router from '../router'
   
   const hardCodeUserName = 'user'
   const hardCodepassword = '123456'
@@ -62,13 +63,11 @@
   const submitForm = () => {
     validateName(true)
     validatePassword(true)
-    if (!errors.value.username 
-        && !errors.value.password 
-        && formData.value.username === hardCodeUserName 
-        && formData.value.password === hardCodepassword){
+    if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
         alert("Grats! login success")
+        router.push({name:'About'})}
     }
-  }
+  
 
   
   const errors = ref({
