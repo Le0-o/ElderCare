@@ -52,7 +52,9 @@
   import {useAuth} from '../router/authenticate'
   
   const hardCodeUserName = 'user'
-  const hardCodepassword = '123456'
+  const hardCodePassword = '123456'
+  const adminUserName = 'admin'; 
+  const adminPassword = '1234567'; 
   const {isAuthenticated} = useAuth()
    
   const formData = ref({
@@ -62,16 +64,44 @@
   
 
   
-  const submitForm = () => {
-    validateName(true)
-    validatePassword(true)
-    if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
-        alert("Grats! login success")
-        isAuthenticated.value = true
-        console.log("logininview",isAuthenticated.value)
-        router.push({name:'About'})}
+  // const submitForm = () => {
+  //   validateName(true)
+  //   validatePassword(true)
+  //   if (!errors.value.username && !errors.value.password && formData.value.username === hardCodeUserName && formData.value.password === hardCodepassword){
+  //       alert("Grats! login success")
+  //       isAuthenticated.value = true
+  //       console.log("logininview",isAuthenticated.value)
+  //       router.push({name:'About'})}
+  //   }
+// login.vue
+const submitForm = () => {
+  validateName(true);
+  validatePassword(true);
+
+  // Check the login credentials of the user or administrator
+  if (!errors.value.username && !errors.value.password) {
+    if (
+      (formData.value.username === hardCodeUserName && formData.value.password === hardCodePassword) ||
+      (formData.value.username === adminUserName && formData.value.password === adminPassword)
+    ) {
+      // Determine the role based on the user name
+      const userRole = formData.value.username === adminUserName ? 'admin' : 'user';
+      
+      // The login success message for the administrator or common user is displayed
+      if (userRole === 'admin') {
+        alert("Welcome, Admin! You have successfully logged in.");
+      } else {
+        alert("Grats! login success");
+      }
+
+      isAuthenticated.value = true;
+      useAuth().login(userRole); // Set the user role during login
+      console.log("logininview", isAuthenticated.value);
+      router.push({ name: 'About' });
     }
-  
+  }
+};
+
 
   
   const errors = ref({
