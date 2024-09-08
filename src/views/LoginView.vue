@@ -31,7 +31,7 @@
         <button type="button" class="btn btn-secondary" @click="toggleMode">
           {{ isRegistering ? 'Switch to Login' : 'Switch to Register' }}
         </button>
-        <!-- New Button to Clear Users -->
+        <!-- New button to clear all users -->
         <button type="button" class="btn btn-danger" @click="clearUsers">Clear Users</button>
       </form>
     </div>
@@ -44,7 +44,7 @@ import router from '../router/index';
 import { useAuth } from '../router/authenticate';
 
 const { isAuthenticated } = useAuth();
-const isRegistering = ref(false); // Toggle between login and register mode
+const isRegistering = ref(false); // Toggle between login and registration mode
 
 const formData = ref({
   username: '',
@@ -56,20 +56,23 @@ const errors = ref({
   password: null,
 });
 
-// Toggle between login and register mode
+// Toggle between login and registration mode
 const toggleMode = () => {
   isRegistering.value = !isRegistering.value;
   clearForm();
 };
 
-// Sanitize user input to prevent XSS attacks
+// Enhanced function to sanitize user input to prevent XSS attacks using regular expressions
 const sanitizeInput = (input) => {
-  const div = document.createElement('div');
-  div.innerText = input;
-  return div.innerHTML;
+  // Regular expression to remove all HTML tags and JavaScript code
+  return input
+    .replace(/<script.*?>.*?<\/script>/gi, '') // Remove <script> tags
+    .replace(/<[^\w<>]*(on\w+)[^>]*>/gi, '') // Remove any HTML tags with event handlers
+    .replace(/javascript:/gi, '') // Remove any javascript: protocols
+    .replace(/[<>]/g, ''); // Remove < and > characters
 };
 
-// Submit form and handle login or registration
+// Submit form and handle registration or login
 const submitForm = () => {
   // Sanitize inputs before processing
   formData.value.username = sanitizeInput(formData.value.username);
@@ -136,6 +139,7 @@ const validatePassword = (blur) => {
   }
 };
 
+// Clear form inputs
 const clearForm = () => {
   formData.value.username = '';
   formData.value.password = '';
@@ -227,3 +231,4 @@ const clearForm = () => {
   background-color: #d32f2f;
 }
 </style>
+
