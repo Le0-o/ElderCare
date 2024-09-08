@@ -1,73 +1,77 @@
-
-  <template>
-  <!-- Using Bootstrap's Header template (starter code) -->
-  <!-- https://getbootstrap.com/docs/5.0/examples/headers/ -->
+<template>
+  <!-- Improved Header Design -->
   <div class="container">
-    <header class="d-flex justify-content-center py-3">
+    <header class="custom-header d-flex justify-content-center py-3">
       <ul class="nav nav-pills">
         <li class="nav-item">
-          <router-link to="/" class="nav-link" active-class="active" aria-current="page"
-            >Home (Week 5)</router-link
-          >
+          <router-link to="/" class="nav-link home-link" active-class="active" aria-current="page">Home</router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/about" class="nav-link" active-class="active">About</router-link>
+          <router-link to="/about" class="nav-link about-link" active-class="active">About</router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/login" class="nav-link" active-class="active">Login</router-link>
+          <router-link to="/login" class="nav-link login-link" active-class="active">Login</router-link>
         </li>
         <li class="nav-item">
-          <button class="nav-link" active-class="active" @click="logout">Logout</button>
+          <button class="nav-link logout-link" @click="logout">Logout</button>
         </li>
       </ul>
     </header>
   </div>
 </template>
+
 <script setup>
 import router from '../router/index'
-import {useAuth} from '../router/authenticate'
+import { useAuth } from '../router/authenticate'
 
-const {isAuthenticated} = useAuth()
+const { isAuthenticated } = useAuth()
 
 const logout = () => {
   isAuthenticated.value = false
-  alert("logout success")
-  router.push({name:'Home'})
-}</script>
+  alert("Logout successful")
+  router.push({ name: 'Home' })
+}
+</script>
 
 <style scoped>
-.b-example-divider {
-  height: 3rem;
-  background-color: rgba(0, 0, 0, 0.1);
-  border: solid rgba(0, 0, 0, 0.15);
-  border-width: 1px 0;
-  box-shadow:
-    inset 0 0.5em 1.5em rgba(0, 0, 0, 0.1),
-    inset 0 0.125em 0.5em rgba(0, 0, 0, 0.15);
+.custom-header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 10px;
 }
 
-.form-control-dark {
-  color: #fff;
-  background-color: var(--bs-dark);
-  border-color: var(--bs-gray);
-}
-.form-control-dark:focus {
-  color: #fff;
-  background-color: var(--bs-dark);
-  border-color: #fff;
-  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+.nav-pills .nav-link {
+  border-radius: 20px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.bi {
-  vertical-align: -0.125em;
-  fill: currentColor;
+.home-link {
+  background-color: #ff9800;
+  color: white;
 }
 
-.text-small {
-  font-size: 85%;
+.about-link {
+  background-color: #8bc34a;
+  color: white;
 }
 
-.dropdown-toggle {
-  outline: 0;
+.login-link {
+  background-color: #2196f3;
+  color: white;
+}
+
+.logout-link {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  transform: scale(1.05);
+  opacity: 0.85;
 }
 </style>
