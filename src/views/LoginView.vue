@@ -62,18 +62,21 @@ const toggleMode = () => {
   clearForm();
 };
 
-// Enhanced function to sanitize user input to prevent XSS attacks using regular expressions
+// Function to sanitize user input to prevent XSS attacks
 const sanitizeInput = (input) => {
-  // Regular expression to remove all HTML tags and JavaScript code
+  // Allow only safe characters (letters, numbers, spaces, basic punctuation)
   return input
     .replace(/<script.*?>.*?<\/script>/gi, '') // Remove <script> tags
-    .replace(/<[^\w<>]*(on\w+)[^>]*>/gi, '') // Remove any HTML tags with event handlers
-    .replace(/javascript:/gi, '') // Remove any javascript: protocols
+    .replace(/on\w+="[^"]*"/gi, '') // Remove inline event handlers
+    .replace(/javascript:/gi, '') // Remove javascript: URLs
     .replace(/[<>]/g, ''); // Remove < and > characters
 };
 
 // Submit form and handle registration or login
 const submitForm = () => {
+  // Preserve original input for duplicate checking
+  const originalUsername = formData.value.username.trim();
+  
   // Sanitize inputs before processing
   formData.value.username = sanitizeInput(formData.value.username);
   formData.value.password = sanitizeInput(formData.value.password);
@@ -85,14 +88,15 @@ const submitForm = () => {
     if (isRegistering.value) {
       // Register new user
       const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
-      const userExists = existingUsers.some(user => user.username === formData.value.username);
+      // Check for duplicates using original input
+      const userExists = existingUsers.some(user => user.username === originalUsername);
 
       if (userExists) {
         alert('User already exists! Please try a different username.');
         return;
       }
 
-      // Add new user to the list
+      // Add new user to the list using sanitized inputs
       existingUsers.push({ username: formData.value.username, password: formData.value.password });
       localStorage.setItem('users', JSON.stringify(existingUsers)); // Store updated users list in localStorage
       alert('Registration successful! Please login.');
@@ -231,4 +235,3 @@ const clearForm = () => {
   background-color: #d32f2f;
 }
 </style>
-
