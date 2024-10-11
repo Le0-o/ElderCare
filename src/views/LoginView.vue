@@ -66,13 +66,18 @@ const errors = ref({
 const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();
 
-// 切换注册和登录模式
+
 const toggleMode = () => {
   isRegistering.value = !isRegistering.value;
   clearForm();
 };
 
-// 使用 Google 登录
+// Define a sanitizeInput function to remove potentially dangerous characters from user input
+function sanitizeInput(input) {
+  return input.replace(/[<>\/'";:()]/g, ''); // Replace special characters with an empty string
+}
+
+// google
 const loginWithGoogle = () => {
   signInWithPopup(auth, googleProvider)
     .then((result) => {
@@ -87,17 +92,73 @@ const loginWithGoogle = () => {
     });
 };
 
-// 表单提交和登录注册
 const submitForm = () => {
-  // 表单提交逻辑省略（与之前相同）
+  // Preserve the original input for duplicate checking
+  const originalUsername = formData.value.username.trim();
+  
+  // Sanitize inputs before processing to avoid unwanted characters
+  formData.value.username = sanitizeInput(formData.value.username);
+  formData.value.password = sanitizeInput(formData.value.password);
+
+  // Validate the username and password inputs
+  validateName(true);
+  validatePassword(true);
+
+  // Proceed only if there are no validation errors
+  if (!errors.value.username && !errors.value.password) {
+    const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Check for admin login first
+    if (formData.value.username === 'admin@123.com' && formData.value.password === 'Lcd123456!') {
+      // Admin login successful
+      alert('Welcome Admin!');
+      isAuthenticated.value = true;
+      useAuth().login('admin'); // Assign 'admin' role to this session
+      router.push({ name: 'Admin' });  // Redirect to the Admin page
+      return;  // Exit the function to avoid checking regular users
+    }
+
+    // Check for regular users in local storage
+    const user = existingUsers.find(
+      user => user.username === formData.value.username && user.password === formData.value.password
+    );
+
+    if (user) {
+      // Regular user login successful
+      alert(`Welcome, ${user.username}! You have successfully logged in.`);
+      isAuthenticated.value = true;
+      useAuth().login('user'); // Assign 'user' role to this session
+      router.push({ name: 'About' });  // Redirect to the main About page
+    } else {
+      // Invalid credentials, show an error message
+      alert('Invalid username or password. Please try again.');
+    }
+  }
 };
+
+
 
 const clearUsers = () => {
   localStorage.removeItem('users');
   alert('All user data has been cleared!');
 };
 
-// 验证函数和其他逻辑省略（与之前相同）
+// Validation functions
+const validateName = (blur) => {
+  if (formData.value.username.length < 3) {
+    if (blur) errors.value.username = 'Name must be at least 3 characters';
+  } else {
+    errors.value.username = null;
+  }
+};
+
+const validatePassword = (blur) => {
+  if (formData.value.password.length < 6) {
+    if (blur) errors.value.password = 'Password must be at least 6 characters length.';
+  } else {
+    errors.value.password = null;
+  }
+};
 
 const clearForm = () => {
   formData.value.username = '';

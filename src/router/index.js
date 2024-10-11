@@ -30,6 +30,12 @@ const routes = [
     name: 'Rate',
     component: RatingView, // Add the new rating route
   },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, isAdmin: true }
+  }  
 ];
 
 const router = createRouter({
