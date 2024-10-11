@@ -1,9 +1,9 @@
-
 <template>
   <div class="auth-container">
     <div class="auth-card">
       <h2>{{ isRegistering ? 'Register' : 'Login' }} to ElderCare</h2>
       <form @submit.prevent="submitForm">
+        <!-- Username input field -->
         <div class="input-group">
           <label for="username">Username</label>
           <input
@@ -13,9 +13,11 @@
             @blur="validateName"
             @input="validateName"
           />
+          <!-- Display username validation errors -->
           <div v-if="errors.username" class="error-text">{{ errors.username }}</div>
         </div>
 
+        <!-- Password input field -->
         <div class="input-group">
           <label for="password">Password</label>
           <input
@@ -25,9 +27,11 @@
             @blur="validatePassword"
             @input="validatePassword"
           />
+          <!-- Display password validation errors -->
           <div v-if="errors.password" class="error-text">{{ errors.password }}</div>
         </div>
 
+        <!-- Submit button for login or register -->
         <button type="submit" class="btn btn-primary">{{ isRegistering ? 'Register' : 'Login' }}</button>
         <button type="button" class="btn btn-secondary" @click="toggleMode">
           {{ isRegistering ? 'Switch to Login' : 'Switch to Register' }}
@@ -39,7 +43,6 @@
       <button type="button" class="btn btn-google" @click="loginWithGoogle">
         <img src="/google-logo.png" alt="Google Logo" /> Sign in with Google
       </button>
-
     </div>
   </div>
 </template>
@@ -50,34 +53,27 @@ import router from '../router/index';
 import { useAuth } from '../router/authenticate';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
+// Local state and Firebase authentication initialization
 const { isAuthenticated } = useAuth();
 const isRegistering = ref(false);
-
 const formData = ref({
   username: '',
   password: '',
 });
-
 const errors = ref({
   username: null,
   password: null,
 });
-
 const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();
 
-
+// Toggle between login and registration modes
 const toggleMode = () => {
   isRegistering.value = !isRegistering.value;
-  clearForm();
+  clearForm(); // Clear form fields when switching modes
 };
 
-// Define a sanitizeInput function to remove potentially dangerous characters from user input
-function sanitizeInput(input) {
-  return input.replace(/[<>\/'";:()]/g, ''); // Replace special characters with an empty string
-}
-
-// google
+// Google Login using Firebase Authentication
 const loginWithGoogle = () => {
   signInWithPopup(auth, googleProvider)
     .then((result) => {
@@ -85,17 +81,20 @@ const loginWithGoogle = () => {
       alert(`Welcome, ${user.displayName}! You have successfully logged in with Google.`);
       isAuthenticated.value = true;
       useAuth().login('user'); // Assume all users are regular users
-      router.push({ name: 'About' });
+      router.push({ name: 'About' }); // Redirect to the About page after login
     })
     .catch((error) => {
       alert('Google sign-in failed: ' + error.message);
     });
 };
 
+// Sanitize user input by removing special characters that could cause issues
+function sanitizeInput(input) {
+  return input.replace(/[<>\/'";:()]/g, ''); // Remove dangerous characters
+}
+
+// Form submission logic for both registration and login
 const submitForm = () => {
-  // Preserve the original input for duplicate checking
-  const originalUsername = formData.value.username.trim();
-  
   // Sanitize inputs before processing to avoid unwanted characters
   formData.value.username = sanitizeInput(formData.value.username);
   formData.value.password = sanitizeInput(formData.value.password);
@@ -108,58 +107,77 @@ const submitForm = () => {
   if (!errors.value.username && !errors.value.password) {
     const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
 
-    // Check for admin login first
+    // Admin login logic first
     if (formData.value.username === 'admin@123.com' && formData.value.password === 'Lcd123456!') {
-      // Admin login successful
       alert('Welcome Admin!');
       isAuthenticated.value = true;
-      useAuth().login('admin'); // Assign 'admin' role to this session
-      router.push({ name: 'Admin' });  // Redirect to the Admin page
-      return;  // Exit the function to avoid checking regular users
+      useAuth().login('admin'); // Set admin role
+      router.push({ name: 'Admin' });  // Redirect to Admin page
+      return;  // Exit the function after successful admin login
     }
 
-    // Check for regular users in local storage
-    const user = existingUsers.find(
-      user => user.username === formData.value.username && user.password === formData.value.password
-    );
+    // If in registration mode
+    if (isRegistering.value) {
+      // Check if the username is already taken
+      const userExists = existingUsers.some(user => user.username === formData.value.username);
+      if (userExists) {
+        alert('Username already exists. Please choose a different one.');
+        return;
+      }
 
-    if (user) {
-      // Regular user login successful
-      alert(`Welcome, ${user.username}! You have successfully logged in.`);
-      isAuthenticated.value = true;
-      useAuth().login('user'); // Assign 'user' role to this session
-      router.push({ name: 'About' });  // Redirect to the main About page
+      // Register new user and store in localStorage
+      const newUser = {
+        username: formData.value.username,
+        password: formData.value.password
+      };
+      existingUsers.push(newUser); // Add new user to the list
+      localStorage.setItem('users', JSON.stringify(existingUsers)); // Store updated users in localStorage
+
+      alert('Registration successful! Please login.');
+      toggleMode(); // Switch back to login mode after successful registration
     } else {
-      // Invalid credentials, show an error message
-      alert('Invalid username or password. Please try again.');
+      // Login logic for regular users
+      const user = existingUsers.find(
+        user => user.username === formData.value.username && user.password === formData.value.password
+      );
+
+      if (user) {
+        alert(`Welcome, ${user.username}! You have successfully logged in.`);
+        isAuthenticated.value = true;
+        useAuth().login('user'); // Set regular user role
+        router.push({ name: 'About' });  // Redirect to the main About page
+      } else {
+        alert('Invalid username or password. Please try again.');
+      }
     }
   }
 };
 
-
-
+// Clear stored users from localStorage (for testing purposes)
 const clearUsers = () => {
   localStorage.removeItem('users');
   alert('All user data has been cleared!');
 };
 
-// Validation functions
+// Validate the username input
 const validateName = (blur) => {
   if (formData.value.username.length < 3) {
-    if (blur) errors.value.username = 'Name must be at least 3 characters';
+    if (blur) errors.value.username = 'Name must be at least 3 characters long.';
   } else {
-    errors.value.username = null;
+    errors.value.username = null; // Clear error if validation passes
   }
 };
 
+// Validate the password input
 const validatePassword = (blur) => {
   if (formData.value.password.length < 6) {
-    if (blur) errors.value.password = 'Password must be at least 6 characters length.';
+    if (blur) errors.value.password = 'Password must be at least 6 characters long.';
   } else {
-    errors.value.password = null;
+    errors.value.password = null; // Clear error if validation passes
   }
 };
 
+// Clear the form inputs
 const clearForm = () => {
   formData.value.username = '';
   formData.value.password = '';
@@ -167,7 +185,6 @@ const clearForm = () => {
 </script>
 
 <style scoped>
-
 .auth-container {
   height: 100vh;
   display: flex;
