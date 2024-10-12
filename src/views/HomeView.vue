@@ -26,10 +26,10 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useAuth } from '../router/authenticate';
+// import { useAuth } from '../router/authenticate';
 
 const router = useRouter();
-const { logout } = useAuth();
+// const { logout } = useAuth();
 
 const navigateToAbout = () => {
   router.push({ name: 'About' });
