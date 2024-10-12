@@ -51,7 +51,6 @@
 import { ref } from 'vue';
 import router from '../router/index';
 import { useAuth } from '../router/authenticate';
-// import { getAuth } from '../firebase/init';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { collection, addDoc, getFirestore } from 'firebase/firestore';
 
@@ -91,6 +90,7 @@ const loginWithGoogle = () => {
       alert('Google sign-in failed: ' + error.message);
     });
 };
+
 // Function to sanitize user input
 const sanitizeInput = (input) => {
   return input.replace(/[<>/'";:()]/g, ''); // Removes potentially harmful characters
@@ -129,10 +129,19 @@ const submitForm = async () => {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, formData.value.username, formData.value.password);
         const user = userCredential.user;
-        alert(`Welcome, ${user.email}!`);
-        isAuthenticated.value = true;
-        useAuth().login('user');
-        router.push({ name: 'About' });
+        
+        // Check if the email ends with "admin.com"
+        if (formData.value.username.endsWith('@admin.com')) {
+          alert('Welcome Admin!');
+          isAuthenticated.value = true;
+          useAuth().login('admin');
+          router.push({ name: 'Admin' });  // Redirect to Admin page
+        } else {
+          alert(`Welcome, ${user.email}!`);
+          isAuthenticated.value = true;
+          useAuth().login('user');
+          router.push({ name: 'About' });
+        }
       } catch (error) {
         alert('Login failed: ' + error.message);
       }
@@ -164,6 +173,8 @@ const clearForm = () => {
   formData.value.password = '';
 };
 </script>
+
+
 
 <style scoped>
 .auth-container {
