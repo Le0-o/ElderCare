@@ -30,6 +30,11 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Export Button -->
+      <div class="export-buttons">
+        <button @click="exportDataAsPDF" class="btn btn-primary">Export as PDF</button>
+      </div>
     </div>
   </div>
 </template>
@@ -37,6 +42,8 @@
 <script>
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/init';  // Import Firestore configuration
+import jsPDF from 'jspdf';              // Import jsPDF for PDF generation
+import 'jspdf-autotable';               // Import jsPDF AutoTable plugin
 
 export default {
   name: 'AdminView',
@@ -78,6 +85,34 @@ export default {
     // Function to format the date for display
     formatDate(date) {
       return date.toLocaleDateString();
+    },
+
+    // Function to export user data as PDF
+    exportDataAsPDF() {
+      const doc = new jsPDF();
+      let y = 10; // Y offset for the PDF content
+
+      // Add title to PDF
+      doc.text('User Data', 10, y);
+      y += 10;
+
+      // Create the table structure for the PDF
+      const headers = [['Email', 'Role', 'Creation Date']];
+      const rows = this.users.map(user => [
+        user.email,
+        user.role,
+        this.formatDate(user.createdAt)
+      ]);
+
+      // Use jsPDF AutoTable to generate table
+      doc.autoTable({
+        head: headers,
+        body: rows,
+        startY: y
+      });
+
+      // Save PDF file
+      doc.save('users_data.pdf');
     }
   }
 };
@@ -155,5 +190,19 @@ export default {
 
 .user-table tr:hover {
   background-color: #ddd;
+}
+
+.export-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.export-buttons .btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 </style>
