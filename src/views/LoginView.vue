@@ -5,9 +5,9 @@
       <form @submit.prevent="submitForm">
         <!-- Username input field -->
         <div class="input-group">
-          <label for="username">Username</label>
+          <label for="username">Email</label>
           <input
-            type="text"
+            type="email"
             id="username"
             v-model="formData.username"
             @blur="validateName"
@@ -51,7 +51,12 @@
 import { ref } from 'vue';
 import router from '../router/index';
 import { useAuth } from '../router/authenticate';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+// import { getAuth } from '../firebase/init';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { collection, addDoc, getFirestore } from 'firebase/firestore';
+
+const db = getFirestore();
+const auth = getAuth();
 
 // Local state and Firebase authentication initialization
 const { isAuthenticated } = useAuth();
@@ -64,7 +69,6 @@ const errors = ref({
   username: null,
   password: null,
 });
-const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();
 
 // Toggle between login and registration modes
@@ -87,76 +91,53 @@ const loginWithGoogle = () => {
       alert('Google sign-in failed: ' + error.message);
     });
 };
-
-// Sanitize user input by removing special characters that could cause issues
-function sanitizeInput(input) {
-  return input.replace(/[<>\/'";:()]/g, ''); // Remove dangerous characters
-}
+// Function to sanitize user input
+const sanitizeInput = (input) => {
+  return input.replace(/[<>/'";:()]/g, ''); // Removes potentially harmful characters
+};
 
 // Form submission logic for both registration and login
-const submitForm = () => {
-  // Sanitize inputs before processing to avoid unwanted characters
+const submitForm = async () => {
   formData.value.username = sanitizeInput(formData.value.username);
   formData.value.password = sanitizeInput(formData.value.password);
 
-  // Validate the username and password inputs
   validateName(true);
   validatePassword(true);
 
-  // Proceed only if there are no validation errors
   if (!errors.value.username && !errors.value.password) {
-    const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
-
-    // Admin login logic first
-    if (formData.value.username === 'admin@123.com' && formData.value.password === 'Lcd123456!') {
-      alert('Welcome Admin!');
-      isAuthenticated.value = true;
-      useAuth().login('admin'); // Set admin role
-      router.push({ name: 'Admin' });  // Redirect to Admin page
-      return;  // Exit the function after successful admin login
-    }
-
-    // If in registration mode
     if (isRegistering.value) {
-      // Check if the username is already taken
-      const userExists = existingUsers.some(user => user.username === formData.value.username);
-      if (userExists) {
-        alert('Username already exists. Please choose a different one.');
-        return;
+      // Register user in Firebase
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.value.username, formData.value.password);
+        const user = userCredential.user;
+        
+        // Store user information in Firestore
+        await addDoc(collection(db, 'users'), {
+          uid: user.uid,
+          email: user.email,
+          createdAt: new Date(),
+          role: 'user',
+        });
+
+        alert('Registration successful!');
+        router.push({ name: 'About' });
+      } catch (error) {
+        alert('Registration failed: ' + error.message);
       }
-
-      // Register new user and store in localStorage
-      const newUser = {
-        username: formData.value.username,
-        password: formData.value.password
-      };
-      existingUsers.push(newUser); // Add new user to the list
-      localStorage.setItem('users', JSON.stringify(existingUsers)); // Store updated users in localStorage
-
-      alert('Registration successful! Please login.');
-      toggleMode(); // Switch back to login mode after successful registration
     } else {
-      // Login logic for regular users
-      const user = existingUsers.find(
-        user => user.username === formData.value.username && user.password === formData.value.password
-      );
-
-      if (user) {
-        alert(`Welcome, ${user.username}! You have successfully logged in.`);
+      // Login logic
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, formData.value.username, formData.value.password);
+        const user = userCredential.user;
+        alert(`Welcome, ${user.email}!`);
         isAuthenticated.value = true;
-        useAuth().login('user'); // Set regular user role
-        router.push({ name: 'About' });  // Redirect to the main About page
-      } else {
-        alert('Invalid username or password. Please try again.');
+        useAuth().login('user');
+        router.push({ name: 'About' });
+      } catch (error) {
+        alert('Login failed: ' + error.message);
       }
     }
   }
-};
-
-// Clear stored users from localStorage (for testing purposes)
-const clearUsers = () => {
-  localStorage.removeItem('users');
-  alert('All user data has been cleared!');
 };
 
 // Validate the username input
@@ -164,7 +145,7 @@ const validateName = (blur) => {
   if (formData.value.username.length < 3) {
     if (blur) errors.value.username = 'Name must be at least 3 characters long.';
   } else {
-    errors.value.username = null; // Clear error if validation passes
+    errors.value.username = null;
   }
 };
 
@@ -173,7 +154,7 @@ const validatePassword = (blur) => {
   if (formData.value.password.length < 6) {
     if (blur) errors.value.password = 'Password must be at least 6 characters long.';
   } else {
-    errors.value.password = null; // Clear error if validation passes
+    errors.value.password = null;
   }
 };
 
@@ -294,3 +275,4 @@ const clearForm = () => {
   background-color: #357ae8;
 }
 </style>
+
