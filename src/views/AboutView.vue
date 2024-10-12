@@ -19,7 +19,6 @@
       <button class="btn btn-primary" @click="learnMore">Rating</button>
       <button class="btn btn-secondary" @click="contactUs">Contact Us</button>
       <button class="btn btn-info" @click="navigateToEvents">Events</button>
-      <button class="btn btn-warning" @click="openEmailForm">Email</button>
     </div>
 
     <!-- Events table (this part is displayed when user clicks "Events") -->
@@ -64,73 +63,20 @@
         </nav>
       </div>
     </div>
-
-    <!-- Email form section -->
-    <div v-if="showEmailForm" class="email-section mt-5">
-      <h2 class="text-center">Send Email</h2>
-      <div class="email-form">
-        <input v-model="email.to" placeholder="Recipient Email" class="form-control mb-2" />
-        <input v-model="email.subject" placeholder="Email Subject" class="form-control mb-2" />
-        <textarea v-model="email.text" placeholder="Email Body" class="form-control mb-2"></textarea>
-        <input type="file" @change="handleFileUpload" class="form-control mb-2" />
-        <button @click="sendEmail" class="btn btn-primary">Send Email</button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 
 // Define router instance
 const router = useRouter();
 
-// State variables for the events table and email form
+// State variables for the events table
 const showEvents = ref(false);  
-const showEmailForm = ref(false);
 
-// Email data model
-const email = ref({
-  to: '',
-  subject: '',
-  text: '',
-  attachment: null
-});
-
-// Open email form function
-const openEmailForm = () => {
-  showEmailForm.value = true;
-};
-
-// File upload handler
-const handleFileUpload = (event) => {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    email.value.attachment = reader.result.split(',')[1]; // Keep only base64 part
-  };
-  reader.readAsDataURL(file);
-};
-
-// Function to send email using Axios to the server-side endpoint
-const sendEmail = async () => {
-  try {
-    const response = await axios.post('http://localhost:3001/send-email', {
-      to: email.value.to,
-      subject: email.value.subject,
-      text: email.value.text,
-      attachment: email.value.attachment
-    });
-    alert('Email sent successfully');
-  } catch (error) {
-    alert('Failed to send email');
-    console.error(error);
-  }
-};
-
-// Event data and pagination logic
+// Event data model
 const events = ref([
 { id: 1, name: 'Health Checkup', description: 'Free health checkup for seniors.', date: '2024-10-20', location: 'Community Hall' },
   { id: 2, name: 'Yoga for Seniors', description: 'Yoga sessions tailored for seniors.', date: '2024-10-22', location: 'Wellness Center' },
@@ -241,7 +187,7 @@ li {
   margin-top: 20px;
 }
 
-.btn-primary, .btn-secondary, .btn-info, .btn-warning {
+.btn-primary, .btn-secondary, .btn-info {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -262,10 +208,6 @@ li {
   background-color: #17a2b8;
 }
 
-.btn-warning {
-  background-color: #ffc107;
-}
-
 .btn:hover {
   opacity: 0.8;
 }
@@ -284,37 +226,5 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-/* Email form styling */
-.email-form {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.email-form input, .email-form textarea {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.email-form button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  width: 100%;
-}
-
-.email-form button:hover {
-  background-color: #45a049;
 }
 </style>

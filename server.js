@@ -1,53 +1,58 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import cors from 'cors';  // Import CORS middleware
-import sgMail from '@sendgrid/mail';
+import cors from 'cors';
+import nodemailer from 'nodemailer';  
 
-// Initialize Express and use body-parser to parse the request body
 const app = express();
 
-// Enable CORS for all origins
+// Enable CORS
 app.use(cors({
-    origin: 'http://localhost:5173',  // Allow requests from this frontend origin
-    methods: ['GET', 'POST'],  // Allow GET and POST requests
-    allowedHeaders: ['Content-Type', 'Authorization']  // Allow these headers in requests
-}));
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type']
+  }));
+  
 
 app.use(bodyParser.json());
-
-// Set the SendGrid API key
-sgMail.setApiKey('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');
 
 // Define the route for sending emails
 app.post('/send-email', async (req, res) => {
     const { to, subject, text, attachment } = req.body;
-
-    // Define the email content
-    const msg = {
-        to: to, // Recipient email
-        from: 'johnmarkbee@gmail.com', // Replace with your verified SendGrid email
-        subject: subject,
-        text: text,
-        attachments: [
-            {
-                content: attachment, // base64-encoded attachment content
-                filename: 'attachment.pdf', // Replace with the actual filename
-                type: 'application/pdf', // MIME type of the attachment
-                disposition: 'attachment'
-            }
-        ]
+  
+    // Configure nodemailer with Gmail SMTP settings
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'johnmarkbee@gmail.com',
+        pass: 'fmnvivnpczzbzisw'
+      }
+    });
+  
+    const mailOptions = {
+      from: 'johnmarkbee@gmail.com',
+      to: to,
+      subject: subject,
+      text: text,
+      attachments: [
+        {
+          content: attachment, // base64-encoded content
+          filename: 'attachment.pdf',
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }
+      ]
     };
-
+  
     try {
-        await sgMail.send(msg);
-        res.status(200).send('Email sent successfully');
+      await transporter.sendMail(mailOptions);
+      res.status(200).send('Email sent successfully');
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Error occurred while sending email');
+      console.error(error);
+      res.status(500).send('Error occurred while sending email');
     }
-});
-
-// Start the server on port 3001
-app.listen(3001, () => {
+  });
+  
+  // Start the server
+  app.listen(3001, () => {
     console.log('Server is running on port 3001');
-});
+  });
