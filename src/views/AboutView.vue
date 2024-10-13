@@ -5,16 +5,6 @@
       <p>We are dedicated to improving the well-being of the elderly through compassionate care, innovative solutions, and community engagement.</p>
     </div>
 
-    <div class="services-section">
-      <h2>Our Services</h2>
-      <ul>
-        <li>24/7 Elderly Care Support</li>
-        <li>Health Monitoring & Wellness Programs</li>
-        <li>Community Activities & Events</li>
-        <li>Customized Care Plans</li>
-      </ul>
-    </div>
-
     <div class="action-buttons">
       <button class="btn btn-primary" @click="learnMore">Rating</button>
       <button class="btn btn-secondary" @click="contactUs">Contact Us</button>
@@ -87,9 +77,23 @@
 
     <!-- Email form section -->
     <div v-if="showEmailForm" class="email-section mt-5">
-      <h2 class="text-center">Send Email</h2>
+      <h2 class="text-center">Send Email to Users</h2>
+
+      <!-- User selection list -->
+      <div class="user-list">
+        <h3>Select Users to Send Email</h3>
+        <div v-for="user in users" :key="user.uid" class="form-check">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            :value="user.email"
+            v-model="selectedEmails"
+          />
+          <label class="form-check-label">{{ user.email }}</label>
+        </div>
+      </div>
+
       <div class="email-form">
-        <input v-model="email.to" placeholder="Recipient Email" class="form-control mb-2" />
         <input v-model="email.subject" placeholder="Email Subject" class="form-control mb-2" />
         <textarea v-model="email.text" placeholder="Email Body" class="form-control mb-2"></textarea>
         <input type="file" @change="handleFileUpload" class="form-control mb-2" />
@@ -103,30 +107,25 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/init';  // Import Firestore configuration
 
 // Define router instance
 const router = useRouter();
-
-// State variables for the events table and email form
-const showEvents = ref(false);  
 const showEmailForm = ref(false);
+const showEvents = ref(false);
 const showSearch = ref(false);
 const showFilter = ref(false);
 
 // Email data model
 const email = ref({
-  to: '',
   subject: '',
   text: '',
-  attachment: null
+  attachment: null,
 });
+const selectedEmails = ref([]); // Holds selected emails for bulk sending
 
-// Open email form function
-const openEmailForm = () => {
-  showEmailForm.value = true;
-};
-
-// File upload handler
+// Function to handle file upload
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   const reader = new FileReader();
@@ -136,14 +135,42 @@ const handleFileUpload = (event) => {
   reader.readAsDataURL(file);
 };
 
-// Function to send email using Axios to the server-side endpoint
+// Fetch users from Firebase Firestore
+const users = ref([]);
+
+const fetchUsers = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'users'));
+    const userData = [];
+    querySnapshot.forEach((doc) => {
+      const user = doc.data();
+      userData.push({
+        uid: user.uid,
+        email: user.email,
+      });
+    });
+    users.value = userData;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+};
+
+// Call fetchUsers when the component is mounted
+fetchUsers();
+
+// Function to send email to selected users
 const sendEmail = async () => {
   try {
+    if (selectedEmails.value.length === 0) {
+      alert('Please select at least one recipient');
+      return;
+    }
+
     await axios.post('http://localhost:3001/send-email', {
-      to: email.value.to,
+      to: selectedEmails.value, // Send to the selected emails
       subject: email.value.subject,
       text: email.value.text,
-      attachment: email.value.attachment
+      attachment: email.value.attachment,
     });
     alert('Email sent successfully');
   } catch (error) {
@@ -232,6 +259,10 @@ const navigateToEvents = () => {
   showEvents.value = true;
 };
 
+const openEmailForm = () => {
+  showEmailForm.value = true;
+};
+
 const learnMore = () => {
   router.push({ name: 'Rate' });
 };
@@ -258,77 +289,21 @@ const contactUs = () => {
   margin-bottom: 20px;
 }
 
-.services-section {
-  margin: 20px 0;
-  padding: 20px;
-  background-color: #e7e7e7;
-  border-radius: 10px;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  background-color: #8BC34A;
-  padding: 10px;
-  margin: 5px 0;
-  color: white;
-  border-radius: 5px;
-}
-
 .action-buttons {
   text-align: center;
   margin-top: 20px;
 }
 
-.btn-primary, .btn-secondary, .btn-info, .btn-warning {
+.btn {
   padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
   margin-right: 10px;
   min-width: 100px;
 }
 
-.btn-primary {
-  background-color: #2196F3;
+.email-section {
+  margin-top: 40px;
 }
 
-.btn-secondary {
-  background-color: #FF9800;
-}
-
-.btn-info {
-  background-color: #17a2b8;
-}
-
-.btn-warning {
-  background-color: #ffc107;
-}
-
-.btn:hover {
-  opacity: 0.8;
-}
-
-.table {
-  width: 100%;
-  margin-top: 20px;
-}
-
-.table th, .table td {
-  padding: 12px;
-  text-align: left;
-}
-
-.search-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Email form styling */
 .email-form {
   max-width: 500px;
   margin: 0 auto;
@@ -358,5 +333,17 @@ li {
 
 .email-form button:hover {
   background-color: #45a049;
+}
+
+.user-list {
+  margin-bottom: 20px;
+}
+
+.form-check-label {
+  margin-left: 8px;
+}
+
+.form-check {
+  margin-bottom: 10px;
 }
 </style>
